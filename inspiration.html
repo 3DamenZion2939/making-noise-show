@@ -1,1 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Inspiration Station | Spreading The Gospel Everywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Daily inspiration: a Bible verse, a short reflection, and audio playback." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0a0f1c; --card:#10182b; --ink:#e8eefc; --muted:#98a3c7; --accent:#ffd166;
+      --brand:#5ab1ff; --brand2:#88ffcc;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(1200px 1200px at 10% -10%, #142246, transparent), var(--bg);color:var(--ink)}
+    a{color:var(--brand)}
+    .wrap{max-width:900px;margin:0 auto;padding:32px}
+    header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+    .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2))}
+    h1{font-size:2rem;margin:0 0 8px}
+    .sub{color:var(--muted);margin:0 0 24px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.06);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.35)}
+    .hero{padding:24px 24px 8px}
+    .date{font-size:.95rem;color:var(--muted)}
+    .ref{font-weight:800;font-size:1.35rem;margin:6px 0 10px}
+    blockquote{margin:0;padding:16px 18px;border-left:4px solid var(--accent);background:rgba(255,209,102,0.05);border-radius:10px}
+    .verse{font-size:1.05rem;line-height:1.6}
+    .msg{padding:18px 24px 8px;color:#dfe7ff;line-height:1.65}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;padding:18px 24px 22px}
+    button, .ghost{appearance:none;border:none;border-radius:12px;padding:10px 14px;font-weight:600;color:#0a0f1c;cursor:pointer;background:linear-gradient(135deg,var(--brand),var(--brand2));}
+    .ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,0.15)}
+    .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+    .audio{padding:10px 16px 22px}
+    audio{width:100%}
+    footer{margin:28px 0 8px;color:var(--muted);font-size:.9rem;text-align:center}
+    .mini{font-size:.85rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="dot"></div>
+      <div>
+        <h1>Inspiration Station</h1>
+        <p class="sub">A daily verse, a short word, and a moment to breathe.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="hero">
+        <div class="date" id="date"></div>
+        <div class="ref" id="ref"></div>
+        <blockquote><div class="verse" id="verse"></div></blockquote>
+      </div>
+      <div class="msg" id="message"></div>
+
+      <div class="audio">
+        <audio id="player" controls preload="none"></audio>
+        <div class="mini" id="audioNote"></div>
+      </div>
+
+      <div class="actions">
+        <div class="row">
+          <button id="shareBtn">Share</button>
+          <button id="copyBtn" class="ghost">Copy text</button>
+          <button id="readBtn" class="ghost">Read aloud</button>
+          <a id="imageLink" class="ghost" href="#" download>Download image</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© <span id="year"></span> Spreading The Gospel Everywhere • The Making Noise Show</div>
+    </footer>
+  </div>
+
+<script>
+/** === 1) YOUR VERSE BANK (expand freely; KJV/WEB are public domain) === */
+const VERSE_BANK = [
+  {
+    ref: "Psalm 27:1 (KJV)",
+    text: "The LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?",
+    theme: "Courage"
+  },
+  {
+    ref: "Isaiah 41:10 (KJV)",
+    text: "Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee...",
+    theme: "Strength"
+  },
+  {
+    ref: "Philippians 4:6-7 (KJV)",
+    text: "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God...",
+    theme: "Peace"
+  },
+  {
+    ref: "Proverbs 3:5-6 (KJV)",
+    text: "Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths.",
+    theme: "Guidance"
+  },
+  {
+    ref: "John 14:27 (KJV)",
+    text: "Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid.",
+    theme: "Peace"
+  }
+];
+// Optional: set this to where you store ElevenLabs MP3s & social images for each day
+const AUDIO_BASE = "/audio"; // e.g. /audio/2025-08-24.mp3 (if you upload daily)
+const IMAGE_BASE = "/og";    // e.g. /og/2025-08-24.png  (optional; can point anywhere)
+
+/** === 2) PICK TODAY'S VERSE DETERMINISTICALLY === */
+function ymd(d=new Date()){
+  const tz = new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
+  const nd = new Date(tz);
+  return nd.toISOString().slice(0,10); // local-ish YYYY-MM-DD
+}
+function dayIndex(dateStr){
+  const base = new Date("2024-01-01T00:00:00Z");
+  const d = new Date(dateStr+"T00:00:00Z");
+  const diff = Math.floor((d - base)/(1000*60*60*24));
+  return ((diff % VERSE_BANK.length)+VERSE_BANK.length)%VERSE_BANK.length;
+}
+
+/** === 3) MESSAGE TEMPLATE (short + uplifting) === */
+function buildMessage(v){
+  return `“${v.text}” (${v.ref}). Today, lean into this: His presence steadies your steps and His Word lights your way. Pray it, speak it, and walk it out.`;
+}
+
+/** === 4) Try to use your ElevenLabs MP3 if present, else leave empty (or use Read Aloud) === */
+async function trySetAudio(dateStr){
+  const player = document.getElementById('player');
+  const note = document.getElementById('audioNote');
+  const mp3Url = `${AUDIO_BASE}/${dateStr}.mp3`;
+  try{
+    const head = await fetch(mp3Url, { method: 'HEAD' });
+    if (head.ok){
+      player.src = mp3Url;
+      note.textContent = "Audio ready (studio).";
+      return;
+    }
+    note.textContent = "Tip: Upload a studio MP3 to /audio/YYYY-MM-DD.mp3 to replace Read Aloud.";
+  }catch(e){
+    note.textContent = "Tip: Use Read Aloud if the studio MP3 isn't available.";
+  }
+}
+
+/** === 5) Read‑aloud fallback (browser speech synthesis) === */
+function readAloud(text){
+  if (!('speechSynthesis' in window)) return alert("Read Aloud not supported in this browser.");
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 0.98; msg.pitch = 1; msg.volume = 1;
+  speechSynthesis.cancel(); // stop anything already speaking
+  speechSynthesis.speak(msg);
+}
+
+/** === 6) Share helpers === */
+function buildShareText(dateStr, v, message){
+  const title = `Inspiration Station — ${dateStr}`;
+  return `${title}\n${v.ref}\n${v.text}\n\n${message}\n\n#DailyDevotional #BibleVerse #TheMakingNoiseShow`;
+}
+
+async function shareContent(text){
+  const shareData = { text, title: "Inspiration Station" };
+  try{
+    if (navigator.share) { await navigator.share(shareData); }
+    else {
+      await navigator.clipboard.writeText(text);
+      alert("Copied to clipboard — paste to share!");
+    }
+  }catch(e){ /* user canceled */ }
+}
+
+/** === 7) Init === */
+(async function init(){
+  const dateStr = ymd();
+  const idx = dayIndex(dateStr);
+  const v = VERSE_BANK[idx];
+  const message = buildMessage(v);
+
+  // Fill UI
+  document.getElementById('date').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  document.getElementById('ref').textContent = v.ref;
+  document.getElementById('verse').textContent = v.text;
+  document.getElementById('message').textContent = message;
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Audio (studio mp3 if available)
+  await trySetAudio(dateStr);
+
+  // Image download link (optional OG card you export); otherwise hide link
+  const imgUrl = `${IMAGE_BASE}/${dateStr}.png`;
+  try{
+    const h = await fetch(imgUrl, {method:'HEAD'});
+    if (h.ok){
+      const a = document.getElementById('imageLink');
+      a.href = imgUrl;
+      a.textContent = "Download share image";
+    } else {
+      document.getElementById('imageLink').style.display = 'none';
+    }
+  }catch(e){ document.getElementById('imageLink').style.display = 'none'; }
+
+  // Buttons
+  document.getElementById('shareBtn').onclick = () => shareContent(buildShareText(dateStr, v, message));
+  document.getElementById('copyBtn').onclick  = async () => {
+    await navigator.clipboard.writeText(buildShareText(dateStr, v, message));
+    alert("Copied! Share wherever you like.");
+  };
+  document.getElementById('readBtn').onclick  = () => readAloud(`${v.text}. ${v.ref}. Reflection: ${message}`);
+})();
+</script>
+</body>
+</html>
 
