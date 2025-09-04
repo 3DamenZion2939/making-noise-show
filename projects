@@ -1,1 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3DamenZion Media Inc — Media • Radio • Streaming</title>
+  <meta name="description" content="3DamenZion Media Inc (pronounced ‘3Dimention’) — Audio, Video, Internet. Home of The Making Noise Show, Spreading The Gospel Everywhere Podcast, WORDis Radio, and 3DTV." />
+  <meta property="og:title" content="3DamenZion Media Inc — Media • Radio • Streaming" />
+  <meta property="og:description" content="The hub for Diego Gomez’s media ecosystem: podcast, radio, IPTV, advertising, and creative services." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/assets/og-image.png" />
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="/assets/favicon.png" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --brand: #22d3ee;
+      --brand2: #a78bfa;
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f8fafc; --card:#ffffff; --text:#0f172a; --muted:#475569; }
+    }
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      background: radial-gradient(1200px 700px at 10% 0%, rgba(34,211,238,.15), transparent 60%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(167,139,250,.12), transparent 60%), var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+    .container{ width:min(1120px, 92%); margin-inline:auto; }
+    header{ position:sticky; top:0; backdrop-filter: blur(10px); background: rgba(11,18,32,.45); border-bottom:1px solid rgba(229,231,235,.1); z-index:50; }
+    .nav{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; }
+    .brand{ display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text); font-weight:700; letter-spacing:.3px; }
+    .logo{ width:40px; aspect-ratio:1; border-radius:12px; background:linear-gradient(135deg, var(--brand), var(--brand2)); display:grid; place-items:center; color:#0b1220; font-weight:800; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:6px 12px; background: rgba(255,255,255,.03); border:1px solid rgba(229,231,235,.15); color:var(--muted); text-decoration:none; font-size:.92rem; }
+    .pill strong{ color:var(--text); }
+
+    main{ padding-bottom:40px; }
+    section{ padding:28px 0; }
+    .hero{ padding:64px 0 32px; }
+    .hero h1{ font-size: clamp(1.8rem, 2.4rem + 1vw, 3.2rem); line-height:1.15; margin:0 0 12px; }
+    .hero p{ color:var(--muted); margin:0 0 22px; max-width:70ch; }
+    .cta{ display:flex; flex-wrap:wrap; gap:12px; }
+    .btn{ display:inline-flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px; border:1px solid rgba(229,231,235,.2); text-decoration:none; color:var(--text); background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.08)); box-shadow: var(--shadow); }
+    .btn.primary{ background: linear-gradient(135deg, var(--brand), var(--brand2)); color:#0b1220; border-color: transparent; font-weight:700; }
+
+    h2{ font-size: clamp(1.4rem, 1.2rem + 1vw, 2rem); margin:0 0 8px; }
+    .sub{ color:var(--muted); margin:0 0 18px; }
+
+    .cards{ display:grid; grid-template-columns: repeat(12, 1fr); gap:14px; }
+    .card{ grid-column: span 12; background: rgba(255,255,255,.03); border:1px solid rgba(229,231,235,.12); border-radius: var(--radius); padding:18px; box-shadow: var(--shadow); display:grid; grid-template-columns: 62px 1fr; gap:14px; align-items:center; text-decoration: none; color: var(--text); }
+    @media (min-width: 720px){ .card{ grid-column: span 6; } }
+    @media (min-width: 1024px){ .card{ grid-column: span 4; } }
+    .icon{ width:52px; aspect-ratio:1; border-radius:14px; display:grid; place-items:center; background:linear-gradient(135deg, rgba(34,211,238,.15), rgba(167,139,250,.15)); border:1px dashed rgba(229,231,235,.2); }
+    .card h3{ margin:0; font-size:1.05rem; }
+    .card p{ margin:6px 0 0; color:var(--muted); font-size:.98rem; }
+
+    footer{ border-top:1px solid rgba(229,231,235,.1); margin-top:30px; padding:22px 0 48px; color:var(--muted); }
+    .links{ display:flex; flex-wrap:wrap; gap:10px; }
+    .note{ font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="#home" aria-label="3DamenZion home">
+        <div class="logo" aria-hidden="true">3D</div>
+        <span>3DamenZion Media Inc</span>
+      </a>
+      <a class="pill" href="#contact"><strong>Book</strong> a project</a>
+    </div>
+  </header>
+
+  <main id="home" class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <p class="pill" aria-label="Tagline">Audio · Video · Internet</p>
+      <h1>Media that makes noise — and meaning.</h1>
+      <p>Founded in 2000 as an advertising agency, <strong>3DamenZion Media Inc</strong> provided radio, television, and internet marketing. Since 2015, we have dedicated our resources as an extension to churches and ministries as an outreach tool. Today, the hub includes <strong>The Making Noise Show</strong>, <strong>Spreading The Gospel Everywhere</strong>, <strong>WORDis Radio</strong>, and <strong>3DTV</strong>.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://3damenzion.org" target="_blank" rel="noopener">Visit 3damenzion.org</a>
+        <a class="btn" href="#projects">Explore projects</a>
+      </div>
+    </section>
+
+    <!-- Projects (lean) -->
+    <section id="projects">
+      <h2>Featured Projects</h2>
+      <p class="sub">Your ecosystem at a glance.</p>
+      <div class="cards">
+        <a class="card" href="https://www.youtube.com/@diegogomez6232" target="_blank" rel="noopener" aria-label="YouTube">
+          <div class="icon" aria-hidden="true">▶️</div>
+          <div>
+            <h3>YouTube Channel</h3>
+            <p>Watch faceless videos, shorts, and full‑length episodes.</p>
+          </div>
+        </a>
+        <a class="card" href="https://www.3damenzion.us" target="_blank" rel="noopener" aria-label="WORDis Radio">
+          <div class="icon" aria-hidden="true">📻</div>
+          <div>
+            <h3>WORDis Radio</h3>
+            <p>The Inspiration Station — Gospel, Jazz, Oldies, Christian Rap/Rock, Salsa, Merengue.</p>
+          </div>
+        </a>
+        <a class="card" href="https://soundcloud.com/3damenzion/tracks" target="_blank" rel="noopener" aria-label="SoundCloud Podcast">
+          <div class="icon" aria-hidden="true">🎧</div>
+          <div>
+            <h3>Podcast on SoundCloud</h3>
+            <p>Listen to tracks and episodes hosted on SoundCloud.</p>
+          </div>
+        </a>
+        <a class="card" href="https://open.spotify.com/show/2aHMYyeh8TKGiQ4Jm87eE0?flow_ctx=cc6d98ae-58c3-4b72-aef5-8408ee160245%3A1756933506" target="_blank" rel="noopener" aria-label="Spotify Podcast">
+          <div class="icon" aria-hidden="true">🎶</div>
+          <div>
+            <h3>Podcast on Spotify</h3>
+            <p>Follow and stream episodes directly on Spotify.</p>
+          </div>
+        </a>
+        <a class="card" href="https://fortress2939.blogspot.com/p/3dtv.html" target="_blank" rel="noopener" aria-label="3DTV Info">
+          <div class="icon" aria-hidden="true">📺</div>
+          <div>
+            <h3>3DTV — Streaming Info</h3>
+            <p>Learn about our IPTV vision, features, and how to watch.</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Press -->
+    <section id="press">
+      <h2>Press & Bookings</h2>
+      <p class="sub">Download the one‑sheet or request an interview.</p>
+      <div class="cta">
+        <a class="btn" href="/assets/3DAMENZION_Media_Kit.pdf" aria-label="Download media kit (PDF)" target="_blank" rel="noopener">Download Media Kit (PDF)</a>
+        <a class="btn" href="#contact">Request an interview</a>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact">
+      <h2>Contact & Social Links</h2>
+      <p class="sub">Email: <a href="mailto:3damenzion@gmail.com">3damenzion@gmail.com</a> · Sundays 6:30–7:00 AM on WHAT 1340 AM / La Kalle 99.9 FM</p>
+      <div class="links">
+        <a class="pill" href="https://www.youtube.com/@diegogomez6232" target="_blank" rel="noopener">YouTube</a>
+        <a class="pill" href="https://x.com/3damenzion" target="_blank" rel="noopener">X (Twitter)</a>
+        <a class="pill" href="https://www.facebook.com/diegodelamega/" target="_blank" rel="noopener">Facebook</a>
+        <a class="pill" href="https://www.linkedin.com/in/diego-gomez-45809834/" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="pill" href="https://bsky.app/profile/3damenzion.bsky.social" target="_blank" rel="noopener">Bluesky</a>
+        <a class="pill" href="https://3damenzion.wordpress.com/" target="_blank" rel="noopener">WordPress</a>
+        <a class="pill" href="https://3damenzion.blog" target="_blank" rel="noopener">Tumblr</a>
+        <a class="pill" href="https://soundcloud.com/3damenzion/tracks" target="_blank" rel="noopener">SoundCloud</a>
+        <a class="pill" href="https://fortress2939.blogspot.com/" target="_blank" rel="noopener">Blogger</a>
+        <a class="pill" href="https://www.facebook.com/profile.php?id=100063567428906#" target="_blank" rel="noopener">WORDis FB</a>
+        <a class="pill" href="https://www.facebook.com/profile.php?id=100057423791106#" target="_blank" rel="noopener">Radio Vida FB</a>
+        <a class="pill" href="https://www.facebook.com/profile.php?id=100063807983494#" target="_blank" rel="noopener">UNIQ NET FB</a>
+        <a class="pill" href="https://www.facebook.com/profile.php?id=61569458752373#" target="_blank" rel="noopener">ROK Ministry FB</a>
+      </div>
+      <p class="note">© <span id="yr"></span> 3DamenZion Media Inc. Pronunciation: 3D@MENZION → “3Dimention”. The @ represents the ‘A’ in amen.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p class="note">Founded in 2000 as an ad agency providing advertising and marketing across radio, television, and the internet. Since 2015, 3DamenZion Media Inc has dedicated its resources to serve churches and ministries as an outreach tool. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>
 
