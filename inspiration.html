@@ -94,6 +94,91 @@
   </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-8vV1n8mA2aJorh1c90bG3+NQm7v7kN0WAn8Q2v6pVZ0z7zEo0zXn1Qy8q8j7qXnXcF1s1o6o0r1yQ9S3m5B7xA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
+  // --- PDF: last 31 days devotional ---
+  async function generateMonthlyPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+
+    // Margins & styles
+    const M = 48;                 // margin
+    const W = doc.internal.pageSize.getWidth() - M*2;
+    let y = M;
+
+    // Title
+    const today = new Date();
+    const monthName = today.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    doc.setFont("Times", "bold"); doc.setFontSize(20);
+    doc.text(`Inspiration Station — ${monthName}`, M, y);
+    y += 24;
+    doc.setFont("Times", "normal"); doc.setFontSize(11);
+    doc.setTextColor(90);
+
+    // Helper to add a day block
+    const addDay = (dateStr, v, msg) => {
+      const dateLine = new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const blocks = [
+        { bold: true, text: `${dateLine}  •  ${v.theme}` },
+        { bold: true, text: v.ref },
+        { bold: false, text: `“${v.text}”` },
+        { bold: false, text: msg }
+      ];
+
+      blocks.forEach((b, i) => {
+        if (y > doc.internal.pageSize.getHeight() - M - 40) {
+          doc.addPage(); y = M;
+        }
+        doc.setFont("Times", b.bold ? "bold" : "normal");
+        doc.setTextColor(i <= 1 ? 30 : 50);
+        doc.setFontSize(i <= 1 ? 12 : 11);
+        const wrapped = doc.splitTextToSize(b.text, W);
+        doc.text(wrapped, M, y);
+        y += 14 * wrapped.length + (i === blocks.length - 1 ? 14 : 8);
+      });
+
+      // Divider
+      doc.setDrawColor(220); doc.setLineWidth(0.8);
+      doc.line(M, y, M + W, y);
+      y += 14;
+    };
+
+    // Build last 31 days from your existing logic
+    const dates = (() => {
+      const out = [];
+      const base = new Date(ymd());
+      for (let i = 0; i < 31; i++) {
+        const d = new Date(base); d.setDate(base.getDate() - i);
+        out.push(d.toISOString().slice(0,10));
+      }
+      return out;
+    })();
+
+    // Loop days
+    doc.setTextColor(50);
+    for (const ds of dates) {
+      const v = VERSE_BANK[dayIndex(ds)];
+      const msg = (typeof buildMessage === "function" && !v.reflection) ? buildMessage(v) : (v.reflection || "");
+      addDay(ds, v, msg);
+    }
+
+    // Footer
+    const year = new Date().getFullYear();
+    doc.setFont("Times", "italic"); doc.setFontSize(10); doc.setTextColor(110);
+    const footer = `© ${year} Spreading The Gospel Everywhere • The Making Noise Show`;
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(footer, M, doc.internal.pageSize.getHeight() - M/2);
+      doc.text(String(i), doc.internal.pageSize.getWidth() - M, doc.internal.pageSize.getHeight() - M/2, { align: "right" });
+    }
+
+    doc.save(`Inspiration-Station_${monthName.replace(/\\s/g,'-')}.pdf`);
+  }
+
+  // Wire the button
+  document.getElementById('pdfBtn')?.addEventListener('click', generateMonthlyPDF);
+</script>
+
+  <script>
 /** === 1) YOUR VERSE BANK (expand freely; KJV/WEB are public domain) === */
 const VERSE_BANK = [
   {
