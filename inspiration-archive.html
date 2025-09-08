@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Inspiration Station — Archive | Spreading The Gospel Everywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Browse recent verses and reflections from Inspiration Station." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0a0f1c; --card:#10182b; --ink:#e8eefc; --muted:#98a3c7; --accent:#ffd166;
+      --brand:#5ab1ff; --brand2:#88ffcc;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(1200px 1200px at 10% -10%, #142246, transparent), var(--bg);color:var(--ink)}
+    a{color:var(--brand);text-decoration:none}
+    .wrap{max-width:1000px;margin:0 auto;padding:28px}
+    header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+    h1{font-size:1.8rem;margin:0}
+    .sub{color:var(--muted);margin:0}
+    .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--ink)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:16px}
+    .card{grid-column:span 12;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    @media(min-width:900px){ .card{grid-column:span 6} }
+    .date{font-size:.9rem;color:var(--muted);margin-bottom:6px}
+    .ref{font-weight:800;font-size:1.05rem;margin:0 0 8px}
+    blockquote{margin:0 0 10px;padding:12px 14px;border-left:4px solid var(--accent);background:rgba(255,209,102,.06);border-radius:8px}
+    .verse{font-size:1rem;line-height:1.6}
+    .reflection{color:#dfe7ff;line-height:1.65;margin-top:8px}
+    .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    button{appearance:none;border:none;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer;color:#0a0f1c;background:linear-gradient(135deg,var(--brand),var(--brand2))}
+    .ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.15)}
+    footer{margin:26px 0 6px;color:var(--muted);font-size:.9rem;text-align:center}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    select,.search{background:#0e1530;color:var(--ink);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 10px}
+    .spacer{flex:1}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Inspiration Station — Archive</h1>
+        <p class="sub">Recent verses & reflections (auto-generated from your verse bank).</p>
+      </div>
+      <a class="pill" href="inspiration.html">← Back to Today</a>
+    </header>
+
+    <div class="controls">
+      <input class="search" id="q" type="search" placeholder="Search verse, reference, or reflection…" />
+      <select id="theme">
+        <option value="">All themes</option>
+      </select>
+      <div class="spacer"></div>
+      <span class="pill" id="rangeLabel">Last 31 days</span>
+    </div>
+
+    <div class="grid" id="list"></div>
+
+    <footer>© <span id="year"></span> Spreading The Gospel Everywhere • The Making Noise Show</footer>
+  </div>
+
+<script>
+/** ==== SAME VERSE BANK as your Inspiration page (31 entries) ==== */
+const VERSE_BANK = [/* paste the 31-entry array we added yesterday here, unchanged */];
+
+/** ==== Utilities (same date logic) ==== */
+function ymd(d=new Date()){
+  const tz = new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
+  const nd = new Date(tz);
+  return nd.toISOString().slice(0,10);
+}
+function dayIndex(dateStr){
+  const base = new Date("2024-01-01T00:00:00Z");
+  const d = new Date(dateStr+"T00:00:00Z");
+  const diff = Math.floor((d - base)/(1000*60*60*24));
+  return ((diff % VERSE_BANK.length)+VERSE_BANK.length)%VERSE_BANK.length;
+}
+function buildMessage(v){
+  // Prefer provided reflection; fallback to a generic line
+  if (v.reflection) return v.reflection;
+  return `“${v.text}” (${v.ref}). Today, lean into this: His presence steadies your steps and His Word lights your way.`;
+}
+function formatLong(d){
+  return new Date(d+"T00:00:00").toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+}
+function buildShareText(dateStr, v, message){
+  const title = `Inspiration Station — ${dateStr}`;
+  return `${title}\n${v.ref}\n${v.text}\n\n${message}\n\n#DailyDevotional #BibleVerse #TheMakingNoiseShow`;
+}
+async function shareContent(text){
+  try{
+    if (navigator.share) await navigator.share({ title:"Inspiration Station", text });
+    else{
+      await navigator.clipboard.writeText(text);
+      alert("Copied to clipboard — paste to share anywhere.");
+    }
+  }catch(e){}
+}
+
+/** ==== Fill theme filter ==== */
+const themeSel = document.getElementById('theme');
+[...new Set(VERSE_BANK.map(v=>v.theme))].sort().forEach(t=>{
+  const opt = document.createElement('option');
+  opt.value = t; opt.textContent = t;
+  themeSel.appendChild(opt);
+});
+
+/** ==== Build last 31 days ==== */
+function getLastNDates(n=31){
+  const out = [];
+  const today = new Date(ymd());
+  for (let i=0;i<n;i++){
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    out.push(ds);
+  }
+  return out;
+}
+
+/** ==== Render ==== */
+const list = document.getElementById('list');
+const q = document.getElementById('q');
+
+function render(){
+  const dates = getLastNDates(31);
+  const term = q.value.trim().toLowerCase();
+  const theme = themeSel.value;
+
+  list.innerHTML = "";
+  dates.forEach(ds=>{
+    const v = VERSE_BANK[dayIndex(ds)];
+    const msg = buildMessage(v);
+
+    // Filter
+    const hay = `${v.ref} ${v.text} ${msg} ${v.theme}`.toLowerCase();
+    if (term && !hay.includes(term)) return;
+    if (theme && v.theme !== theme) return;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="date">${formatLong(ds)} • <span style="opacity:.8">${v.theme}</span></div>
+      <div class="ref">${v.ref}</div>
+      <blockquote><div class="verse">${v.text}</div></blockquote>
+      <div class="reflection">${msg}</div>
+      <div class="row">
+        <button data-share>Share</button>
+        <button class="ghost" data-copy>Copy</button>
+      </div>
+    `;
+    card.querySelector('[data-share]').onclick = () => shareContent(buildShareText(ds, v, msg));
+    card.querySelector('[data-copy]').onclick  = async () => {
+      await navigator.clipboard.writeText(buildShareText(ds, v, msg));
+      alert("Copied! Share wherever you like.");
+    };
+    list.appendChild(card);
+  });
+}
+
+q.addEventListener('input', render);
+themeSel.addEventListener('change', render);
+
+document.getElementById('year').textContent = new Date().getFullYear();
+render();
+</script>
+</body>
+</html>
