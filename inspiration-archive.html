@@ -60,6 +60,81 @@
 
     <footer>© <span id="year"></span> Spreading The Gospel Everywhere • The Making Noise Show</footer>
   </div>
+<script>
+  // --- PDF: last 31 days devotional (Archive page) ---
+  async function generateMonthlyPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+
+    const M = 48; // margin
+    const W = doc.internal.pageSize.getWidth() - M * 2;
+    let y = M;
+
+    const today = new Date();
+    const monthName = today.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+    // Title
+    doc.setFont("Times", "bold"); doc.setFontSize(20); doc.setTextColor(30);
+    doc.text(`Inspiration Station — ${monthName}`, M, y); y += 26;
+    doc.setFont("Times", "normal"); doc.setFontSize(11); doc.setTextColor(70);
+
+    const addDay = (dateStr, v, msg) => {
+      const dateLine = new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const blocks = [
+        { bold: true, color: 30, size: 12, text: `${dateLine}  •  ${v.theme}` },
+        { bold: true, color: 30, size: 12, text: v.ref },
+        { bold: false, color: 50, size: 11, text: `“${v.text}”` },
+        { bold: false, color: 60, size: 11, text: msg }
+      ];
+
+      for (const b of blocks) {
+        if (y > doc.internal.pageSize.getHeight() - M - 40) { doc.addPage(); y = M; }
+        doc.setFont("Times", b.bold ? "bold" : "normal");
+        doc.setFontSize(b.size); doc.setTextColor(b.color);
+        const wrapped = doc.splitTextToSize(b.text, W);
+        doc.text(wrapped, M, y);
+        y += 14 * wrapped.length + 8;
+      }
+
+      // Divider
+      doc.setDrawColor(220); doc.setLineWidth(0.8);
+      doc.line(M, y, M + W, y); y += 14;
+    };
+
+    // Build last 31 days using your existing helpers
+    const dates = (() => {
+      const out = [];
+      const base = new Date(ymd());
+      for (let i = 0; i < 31; i++) {
+        const d = new Date(base); d.setDate(base.getDate() - i);
+        out.push(d.toISOString().slice(0,10));
+      }
+      return out;
+    })();
+
+    for (const ds of dates) {
+      const v = VERSE_BANK[dayIndex(ds)];
+      const msg = v.reflection ? v.reflection : buildMessage(v);
+      addDay(ds, v, msg);
+    }
+
+    // Footer with page numbers
+    const year = new Date().getFullYear();
+    const footer = `© ${year} Spreading The Gospel Everywhere • The Making Noise Show`;
+    const pages = doc.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFont("Times", "italic"); doc.setFontSize(10); doc.setTextColor(110);
+      doc.text(footer, M, doc.internal.pageSize.getHeight() - M/2);
+      doc.text(String(i), doc.internal.pageSize.getWidth() - M, doc.internal.pageSize.getHeight() - M/2, { align: "right" });
+    }
+
+    doc.save(`Inspiration-Station_${monthName.replace(/\s/g,'-')}.pdf`);
+  }
+
+  // Wire the button
+  document.getElementById('pdfBtn')?.addEventListener('click', generateMonthlyPDF);
+</script>
 
 <script>
 /** ==== SAME VERSE BANK as your Inspiration page (31 entries) ==== */
