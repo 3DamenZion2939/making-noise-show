@@ -19,7 +19,7 @@
     header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
     h1{font-size:1.8rem;margin:0}
     .sub{color:var(--muted);margin:0}
-    .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--ink)}
+    .pill,button{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--ink);cursor:pointer}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:16px}
     .card{grid-column:span 12;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     @media(min-width:900px){ .card{grid-column:span 6} }
@@ -29,7 +29,6 @@
     .verse{font-size:1rem;line-height:1.6}
     .reflection{color:#dfe7ff;line-height:1.65;margin-top:8px}
     .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-    button{appearance:none;border:none;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer;color:#0a0f1c;background:linear-gradient(135deg,var(--brand),var(--brand2))}
     .ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.15)}
     footer{margin:26px 0 6px;color:var(--muted);font-size:.9rem;text-align:center}
     .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -44,10 +43,13 @@
         <h1>Inspiration Station — Archive</h1>
         <p class="sub">Recent verses & reflections (auto-generated from your verse bank).</p>
       </div>
-      <a class="pill" href="inspiration.html">← Back to Today</a>
+      <div class="controls">
+        <a class="pill" href="inspiration.html">← Back to Today</a>
+        <button id="pdfBtn" class="pill">Download Monthly PDF</button>
+      </div>
     </header>
 
-    <div class="controls">
+    <div class="controls" style="margin-top:6px">
       <input class="search" id="q" type="search" placeholder="Search verse, reference, or reflection…" />
       <select id="theme">
         <option value="">All themes</option>
@@ -60,274 +62,45 @@
 
     <footer>© <span id="year"></span> Spreading The Gospel Everywhere • The Making Noise Show</footer>
   </div>
-<script>
-  // --- PDF: last 31 days devotional (Archive page) ---
-  async function generateMonthlyPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: "pt", format: "letter" });
 
-    const M = 48; // margin
-    const W = doc.internal.pageSize.getWidth() - M * 2;
-    let y = M;
-
-    const today = new Date();
-    const monthName = today.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-
-    // Title
-    doc.setFont("Times", "bold"); doc.setFontSize(20); doc.setTextColor(30);
-    doc.text(`Inspiration Station — ${monthName}`, M, y); y += 26;
-    doc.setFont("Times", "normal"); doc.setFontSize(11); doc.setTextColor(70);
-
-    const addDay = (dateStr, v, msg) => {
-      const dateLine = new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-      const blocks = [
-        { bold: true, color: 30, size: 12, text: `${dateLine}  •  ${v.theme}` },
-        { bold: true, color: 30, size: 12, text: v.ref },
-        { bold: false, color: 50, size: 11, text: `“${v.text}”` },
-        { bold: false, color: 60, size: 11, text: msg }
-      ];
-
-      for (const b of blocks) {
-        if (y > doc.internal.pageSize.getHeight() - M - 40) { doc.addPage(); y = M; }
-        doc.setFont("Times", b.bold ? "bold" : "normal");
-        doc.setFontSize(b.size); doc.setTextColor(b.color);
-        const wrapped = doc.splitTextToSize(b.text, W);
-        doc.text(wrapped, M, y);
-        y += 14 * wrapped.length + 8;
-      }
-
-      // Divider
-      doc.setDrawColor(220); doc.setLineWidth(0.8);
-      doc.line(M, y, M + W, y); y += 14;
-    };
-
-    // Build last 31 days using your existing helpers
-    const dates = (() => {
-      const out = [];
-      const base = new Date(ymd());
-      for (let i = 0; i < 31; i++) {
-        const d = new Date(base); d.setDate(base.getDate() - i);
-        out.push(d.toISOString().slice(0,10));
-      }
-      return out;
-    })();
-
-    for (const ds of dates) {
-      const v = VERSE_BANK[dayIndex(ds)];
-      const msg = v.reflection ? v.reflection : buildMessage(v);
-      addDay(ds, v, msg);
-    }
-
-    // Footer with page numbers
-    const year = new Date().getFullYear();
-    const footer = `© ${year} Spreading The Gospel Everywhere • The Making Noise Show`;
-    const pages = doc.getNumberOfPages();
-    for (let i = 1; i <= pages; i++) {
-      doc.setPage(i);
-      doc.setFont("Times", "italic"); doc.setFontSize(10); doc.setTextColor(110);
-      doc.text(footer, M, doc.internal.pageSize.getHeight() - M/2);
-      doc.text(String(i), doc.internal.pageSize.getWidth() - M, doc.internal.pageSize.getHeight() - M/2, { align: "right" });
-    }
-
-    doc.save(`Inspiration-Station_${monthName.replace(/\s/g,'-')}.pdf`);
-  }
-
-  // Wire the button
-  document.getElementById('pdfBtn')?.addEventListener('click', generateMonthlyPDF);
-</script>
+  <!-- Load jsPDF (no integrity attr to avoid SRI mismatch) -->
+  <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
-/** ==== SAME VERSE BANK as your Inspiration page (31 entries) ==== */
 const VERSE_BANK = [
-  {
-    ref: "Psalm 27:1 (KJV)",
-    text: "The LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?",
-    theme: "Courage",
-    reflection: "God Himself is your light and salvation. Whatever darkness or fear rises up, remember who walks before you."
-  },
-  {
-    ref: "Isaiah 41:10 (KJV)",
-    text: "Fear thou not; for I am with thee: be not dismayed; for I am thy God...",
-    theme: "Strength",
-    reflection: "God promises His presence and His help. You are never carrying your burdens alone."
-  },
-  {
-    ref: "Philippians 4:6-7 (KJV)",
-    text: "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God...",
-    theme: "Peace",
-    reflection: "Prayer trades your anxiety for God’s peace. Breathe deep and bring it all to Him today."
-  },
-  {
-    ref: "Proverbs 3:5-6 (KJV)",
-    text: "Trust in the LORD with all thine heart; and lean not unto thine own understanding...",
-    theme: "Guidance",
-    reflection: "Your own wisdom is limited. God’s wisdom never fails. Trust Him to direct your path."
-  },
-  {
-    ref: "John 14:27 (KJV)",
-    text: "Peace I leave with you, my peace I give unto you...",
-    theme: "Peace",
-    reflection: "Jesus doesn’t give the world’s fragile peace, but His lasting peace. Let it calm your heart today."
-  },
-  {
-    ref: "Psalm 23:1 (KJV)",
-    text: "The LORD is my shepherd; I shall not want.",
-    theme: "Provision",
-    reflection: "A shepherd always provides. God has already gone ahead of you to meet your needs."
-  },
-  {
-    ref: "Romans 8:28 (KJV)",
-    text: "And we know that all things work together for good to them that love God...",
-    theme: "Purpose",
-    reflection: "Even setbacks are woven into God’s plan. Trust that He’s shaping good from every thread."
-  },
-  {
-    ref: "Joshua 1:9 (KJV)",
-    text: "Be strong and of a good courage; be not afraid...",
-    theme: "Courage",
-    reflection: "Wherever you go, God goes too. His presence gives courage that no fear can shake."
-  },
-  {
-    ref: "Matthew 11:28 (KJV)",
-    text: "Come unto me, all ye that labour and are heavy laden, and I will give you rest.",
-    theme: "Rest",
-    reflection: "You don’t have to carry it all. Jesus offers rest for your soul if you’ll hand it over."
-  },
-  {
-    ref: "Psalm 46:10 (KJV)",
-    text: "Be still, and know that I am God...",
-    theme: "Stillness",
-    reflection: "Pause. Breathe. Remember who is truly in control. His power is greater than your chaos."
-  },
-  {
-    ref: "Lamentations 3:22-23 (KJV)",
-    text: "It is of the LORD'S mercies that we are not consumed...",
-    theme: "Mercy",
-    reflection: "Every sunrise is a fresh page of mercy. Yesterday’s failures are not the end."
-  },
-  {
-    ref: "Isaiah 40:31 (KJV)",
-    text: "But they that wait upon the LORD shall renew their strength...",
-    theme: "Renewal",
-    reflection: "Waiting on God isn’t wasted time—it’s the place where your strength is reborn."
-  },
-  {
-    ref: "Psalm 121:1-2 (KJV)",
-    text: "I will lift up mine eyes unto the hills, from whence cometh my help...",
-    theme: "Help",
-    reflection: "When you look up, you find your true source of help: the Maker of heaven and earth."
-  },
-  {
-    ref: "John 3:16 (KJV)",
-    text: "For God so loved the world, that he gave his only begotten Son...",
-    theme: "Love",
-    reflection: "You are deeply loved. The cross is proof that His love knows no limits."
-  },
-  {
-    ref: "Psalm 91:1 (KJV)",
-    text: "He that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty.",
-    theme: "Protection",
-    reflection: "In God’s presence, you find safety. Stay close and rest in His shadow."
-  },
-  {
-    ref: "2 Corinthians 5:7 (KJV)",
-    text: "For we walk by faith, not by sight.",
-    theme: "Faith",
-    reflection: "Don’t be ruled by what your eyes see. Let faith set your steps today."
-  },
-  {
-    ref: "Psalm 34:8 (KJV)",
-    text: "O taste and see that the LORD is good: blessed is the man that trusteth in him.",
-    theme: "Goodness",
-    reflection: "God’s goodness isn’t theory—it’s experience. Lean in and see for yourself."
-  },
-  {
-    ref: "James 1:5 (KJV)",
-    text: "If any of you lack wisdom, let him ask of God...",
-    theme: "Wisdom",
-    reflection: "God doesn’t shame you for asking—He freely gives wisdom to those who seek Him."
-  },
-  {
-    ref: "Matthew 6:33 (KJV)",
-    text: "But seek ye first the kingdom of God, and his righteousness...",
-    theme: "Priority",
-    reflection: "Put God first, and everything else will fall into its right place."
-  },
-  {
-    ref: "Hebrews 11:1 (KJV)",
-    text: "Now faith is the substance of things hoped for, the evidence of things not seen.",
-    theme: "Faith",
-    reflection: "Faith anchors hope in what you can’t yet see—but God already knows the outcome."
-  },
-  {
-    ref: "Psalm 100:4 (KJV)",
-    text: "Enter into his gates with thanksgiving, and into his courts with praise...",
-    theme: "Gratitude",
-    reflection: "Gratitude opens doors. Begin with thanks and you’ll sense His presence."
-  },
-  {
-    ref: "John 8:32 (KJV)",
-    text: "And ye shall know the truth, and the truth shall make you free.",
-    theme: "Freedom",
-    reflection: "Truth isn’t just knowledge—it’s liberation. Jesus sets you free at the core."
-  },
-  {
-    ref: "Romans 12:2 (KJV)",
-    text: "And be not conformed to this world: but be ye transformed by the renewing of your mind...",
-    theme: "Transformation",
-    reflection: "Your mind is a battlefield. Let God reshape your thoughts for His good will."
-  },
-  {
-    ref: "Psalm 37:4 (KJV)",
-    text: "Delight thyself also in the LORD: and he shall give thee the desires of thine heart.",
-    theme: "Delight",
-    reflection: "When God is your joy, even your desires align with His perfect gifts."
-  },
-  {
-    ref: "Ephesians 2:8-9 (KJV)",
-    text: "For by grace are ye saved through faith; and that not of yourselves...",
-    theme: "Grace",
-    reflection: "You can’t earn salvation—it’s a gift. Walk today as someone set free by grace."
-  },
-  {
-    ref: "Psalm 139:14 (KJV)",
-    text: "I will praise thee; for I am fearfully and wonderfully made...",
-    theme: "Identity",
-    reflection: "You are crafted with intention. Don’t let the world define what God has already affirmed."
-  },
-  {
-    ref: "2 Timothy 1:7 (KJV)",
-    text: "For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind.",
-    theme: "Confidence",
-    reflection: "Fear doesn’t come from God. His Spirit equips you with courage and clarity."
-  },
-  {
-    ref: "Micah 6:8 (KJV)",
-    text: "He hath shewed thee, O man, what is good; and what doth the LORD require of thee...",
-    theme: "Justice",
-    reflection: "God’s requirements are simple: act justly, love mercy, walk humbly. No pretenses, just truth."
-  },
-  {
-    ref: "1 Peter 5:7 (KJV)",
-    text: "Casting all your care upon him; for he careth for you.",
-    theme: "Care",
-    reflection: "You don’t need to hold it all. God cares deeply—cast your worries on Him."
-  },
-  {
-    ref: "Matthew 5:16 (KJV)",
-    text: "Let your light so shine before men, that they may see your good works...",
-    theme: "Witness",
-    reflection: "Your life is a light. Shine it naturally, so others see Christ through you."
-  },
-  {
-    ref: "Revelation 21:4 (KJV)",
-    text: "And God shall wipe away all tears from their eyes...",
-    theme: "Hope",
-    reflection: "The story ends with no more pain. Hold on—your tears are temporary, but joy is eternal."
-  }
+  {"ref":"Psalm 27:1 (KJV)","text":"The LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?","theme":"Courage","reflection":"God Himself is your light and salvation. Whatever darkness or fear rises up, remember who walks before you."},
+  {"ref":"Isaiah 41:10 (KJV)","text":"Fear thou not; for I am with thee: be not dismayed; for I am thy God...","theme":"Strength","reflection":"God promises His presence and His help. You are never carrying your burdens alone."},
+  {"ref":"Philippians 4:6-7 (KJV)","text":"Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God...","theme":"Peace","reflection":"Prayer trades your anxiety for God’s peace. Breathe deep and bring it all to Him today."},
+  {"ref":"Proverbs 3:5-6 (KJV)","text":"Trust in the LORD with all thine heart; and lean not unto thine own understanding...","theme":"Guidance","reflection":"Your own wisdom is limited. God’s wisdom never fails. Trust Him to direct your path."},
+  {"ref":"John 14:27 (KJV)","text":"Peace I leave with you, my peace I give unto you...","theme":"Peace","reflection":"Jesus doesn’t give the world’s fragile peace, but His lasting peace. Let it calm your heart today."},
+  {"ref":"Psalm 23:1 (KJV)","text":"The LORD is my shepherd; I shall not want.","theme":"Provision","reflection":"A shepherd always provides. God has already gone ahead of you to meet your needs."},
+  {"ref":"Romans 8:28 (KJV)","text":"And we know that all things work together for good to them that love God...","theme":"Purpose","reflection":"Even setbacks are woven into God’s plan. Trust that He’s shaping good from every thread."},
+  {"ref":"Joshua 1:9 (KJV)","text":"Be strong and of a good courage; be not afraid...","theme":"Courage","reflection":"Wherever you go, God goes too. His presence gives courage that no fear can shake."},
+  {"ref":"Matthew 11:28 (KJV)","text":"Come unto me, all ye that labour and are heavy laden, and I will give you rest.","theme":"Rest","reflection":"You don’t have to carry it all. Jesus offers rest for your soul if you’ll hand it over."},
+  {"ref":"Psalm 46:10 (KJV)","text":"Be still, and know that I am God...","theme":"Stillness","reflection":"Pause. Breathe. Remember who is truly in control. His power is greater than your chaos."},
+  {"ref":"Lamentations 3:22-23 (KJV)","text":"It is of the LORD'S mercies that we are not consumed...","theme":"Mercy","reflection":"Every sunrise is a fresh page of mercy. Yesterday’s failures are not the end."},
+  {"ref":"Isaiah 40:31 (KJV)","text":"But they that wait upon the LORD shall renew their strength...","theme":"Renewal","reflection":"Waiting on God isn’t wasted time—it’s the place where your strength is reborn."},
+  {"ref":"Psalm 121:1-2 (KJV)","text":"I will lift up mine eyes unto the hills, from whence cometh my help...","theme":"Help","reflection":"When you look up, you find your true source of help: the Maker of heaven and earth."},
+  {"ref":"John 3:16 (KJV)","text":"For God so loved the world, that he gave his only begotten Son...","theme":"Love","reflection":"You are deeply loved. The cross is proof that His love knows no limits."},
+  {"ref":"Psalm 91:1 (KJV)","text":"He that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty.","theme":"Protection","reflection":"In God’s presence, you find safety. Stay close and rest in His shadow."},
+  {"ref":"2 Corinthians 5:7 (KJV)","text":"For we walk by faith, not by sight.","theme":"Faith","reflection":"Don’t be ruled by what your eyes see. Let faith set your steps today."},
+  {"ref":"Psalm 34:8 (KJV)","text":"O taste and see that the LORD is good: blessed is the man that trusteth in him.","theme":"Goodness","reflection":"God’s goodness isn’t theory—it’s experience. Lean in and see for yourself."},
+  {"ref":"James 1:5 (KJV)","text":"If any of you lack wisdom, let him ask of God...","theme":"Wisdom","reflection":"God doesn’t shame you for asking—He freely gives wisdom to those who seek Him."},
+  {"ref":"Matthew 6:33 (KJV)","text":"But seek ye first the kingdom of God, and his righteousness...","theme":"Priority","reflection":"Put God first, and everything else will fall into its right place."},
+  {"ref":"Hebrews 11:1 (KJV)","text":"Now faith is the substance of things hoped for, the evidence of things not seen.","theme":"Faith","reflection":"Faith anchors hope in what you can’t yet see—but God already knows the outcome."},
+  {"ref":"Psalm 100:4 (KJV)","text":"Enter into his gates with thanksgiving, and into his courts with praise...","theme":"Gratitude","reflection":"Gratitude opens doors. Begin with thanks and you’ll sense His presence."},
+  {"ref":"John 8:32 (KJV)","text":"And ye shall know the truth, and the truth shall make you free.","theme":"Freedom","reflection":"Truth isn’t just knowledge—it’s liberation. Jesus sets you free at the core."},
+  {"ref":"Romans 12:2 (KJV)","text":"And be not conformed to this world: but be ye transformed by the renewing of your mind...","theme":"Transformation","reflection":"Your mind is a battlefield. Let God reshape your thoughts for His good will."},
+  {"ref":"Psalm 37:4 (KJV)","text":"Delight thyself also in the LORD: and he shall give thee the desires of thine heart.","theme":"Delight","reflection":"When God is your joy, even your desires align with His perfect gifts."},
+  {"ref":"Ephesians 2:8-9 (KJV)","text":"For by grace are ye saved through faith; and that not of yourselves...","theme":"Grace","reflection":"You can’t earn salvation—it’s a gift. Walk today as someone set free by grace."},
+  {"ref":"Psalm 139:14 (KJV)","text":"I will praise thee; for I am fearfully and wonderfully made...","theme":"Identity","reflection":"You are crafted with intention. Don’t let the world define what God has already affirmed."},
+  {"ref":"2 Timothy 1:7 (KJV)","text":"For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind.","theme":"Confidence","reflection":"Fear doesn’t come from God. His Spirit equips you with courage and clarity."},
+  {"ref":"Micah 6:8 (KJV)","text":"He hath shewed thee, O man, what is good; and what doth the LORD require of thee...","theme":"Justice","reflection":"God’s requirements are simple: act justly, love mercy, walk humbly. No pretenses, just truth."},
+  {"ref":"1 Peter 5:7 (KJV)","text":"Casting all your care upon him; for he careth for you.","theme":"Care","reflection":"You don’t need to hold it all. God cares deeply—cast your worries on Him."},
+  {"ref":"Matthew 5:16 (KJV)","text":"Let your light so shine before men, that they may see your good works...","theme":"Witness","reflection":"Your life is a light. Shine it naturally, so others see Christ through you."},
+  {"ref":"Revelation 21:4 (KJV)","text":"And God shall wipe away all tears from their eyes...","theme":"Hope","reflection":"The story ends with no more pain. Hold on—your tears are temporary, but joy is eternal."}
 ];
 
-/** ==== Utilities (same date logic) ==== */
 function ymd(d=new Date()){
   const tz = new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
   const nd = new Date(tz);
@@ -340,7 +113,6 @@ function dayIndex(dateStr){
   return ((diff % VERSE_BANK.length)+VERSE_BANK.length)%VERSE_BANK.length;
 }
 function buildMessage(v){
-  // Prefer provided reflection; fallback to a generic line
   if (v.reflection) return v.reflection;
   return `“${v.text}” (${v.ref}). Today, lean into this: His presence steadies your steps and His Word lights your way.`;
 }
@@ -349,7 +121,13 @@ function formatLong(d){
 }
 function buildShareText(dateStr, v, message){
   const title = `Inspiration Station — ${dateStr}`;
-  return `${title}\n${v.ref}\n${v.text}\n\n${message}\n\n#DailyDevotional #BibleVerse #TheMakingNoiseShow`;
+  return `${title}
+${v.ref}
+${v.text}
+
+${message}
+
+#DailyDevotional #BibleVerse #TheMakingNoiseShow`;
 }
 async function shareContent(text){
   try{
@@ -361,7 +139,6 @@ async function shareContent(text){
   }catch(e){}
 }
 
-/** ==== Fill theme filter ==== */
 const themeSel = document.getElementById('theme');
 [...new Set(VERSE_BANK.map(v=>v.theme))].sort().forEach(t=>{
   const opt = document.createElement('option');
@@ -369,7 +146,6 @@ const themeSel = document.getElementById('theme');
   themeSel.appendChild(opt);
 });
 
-/** ==== Build last 31 days ==== */
 function getLastNDates(n=31){
   const out = [];
   const today = new Date(ymd());
@@ -382,7 +158,6 @@ function getLastNDates(n=31){
   return out;
 }
 
-/** ==== Render ==== */
 const list = document.getElementById('list');
 const q = document.getElementById('q');
 
@@ -396,7 +171,6 @@ function render(){
     const v = VERSE_BANK[dayIndex(ds)];
     const msg = buildMessage(v);
 
-    // Filter
     const hay = `${v.ref} ${v.text} ${msg} ${v.theme}`.toLowerCase();
     if (term && !hay.includes(term)) return;
     if (theme && v.theme !== theme) return;
@@ -427,6 +201,65 @@ themeSel.addEventListener('change', render);
 
 document.getElementById('year').textContent = new Date().getFullYear();
 render();
+
+async function generateMonthlyPDF() {
+  if (!window.jspdf) { alert("PDF library failed to load. Please refresh and try again."); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "letter" });
+
+  const M = 48; const W = doc.internal.pageSize.getWidth() - M*2; let y = M;
+  const today = new Date();
+  const monthName = today.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+  doc.setFont("Times", "bold"); doc.setFontSize(20); doc.setTextColor(30);
+  doc.text(`Inspiration Station — ${monthName}`, M, y); y += 26;
+  doc.setFont("Times", "normal"); doc.setFontSize(11); doc.setTextColor(70);
+
+  const addDay = (dateStr, v, msg) => {
+    const dateLine = new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const blocks = [
+      { bold: true, color: 30, size: 12, text: `${dateLine}  •  ${v.theme}` },
+      { bold: true, color: 30, size: 12, text: v.ref },
+      { bold: false, color: 50, size: 11, text: `“${v.text}”` },
+      { bold: false, color: 60, size: 11, text: msg }
+    ];
+    for (const b of blocks) {
+      if (y > doc.internal.pageSize.getHeight() - M - 40) { doc.addPage(); y = M; }
+      doc.setFont("Times", b.bold ? "bold" : "normal");
+      doc.setFontSize(b.size); doc.setTextColor(b.color);
+      const wrapped = doc.splitTextToSize(b.text, W);
+      doc.text(wrapped, M, y);
+      y += 14 * wrapped.length + 8;
+    }
+    doc.setDrawColor(220); doc.setLineWidth(0.8); doc.line(M, y, M + W, y); y += 14;
+  };
+
+  const dates = (() => {
+    const out = []; const base = new Date(ymd());
+    for (let i = 0; i < 31; i++) { const d = new Date(base); d.setDate(base.getDate() - i); out.push(d.toISOString().slice(0,10)); }
+    return out;
+  })();
+
+  for (const ds of dates) {
+    const v = VERSE_BANK[dayIndex(ds)];
+    const msg = v.reflection ? v.reflection : buildMessage(v);
+    addDay(ds, v, msg);
+  }
+
+  const year = new Date().getFullYear();
+  const footer = `© ${year} Spreading The Gospel Everywhere • The Making Noise Show`;
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFont("Times", "italic"); doc.setFontSize(10); doc.setTextColor(110);
+    doc.text(footer, M, doc.internal.pageSize.getHeight() - M/2);
+    doc.text(String(i), doc.internal.pageSize.getWidth() - M, doc.internal.pageSize.getHeight() - M/2, { align: "right" });
+  }
+
+  doc.save(`Inspiration-Station_${monthName.replace(/\s/g,'-')}.pdf`);
+}
+document.getElementById('pdfBtn')?.addEventListener('click', generateMonthlyPDF);
 </script>
 </body>
 </html>
+
