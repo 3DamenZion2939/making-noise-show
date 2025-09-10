@@ -156,10 +156,11 @@ const VERSE_BANK = [
 ];
 
 /** === Utilities === */
-function ymd(d=new Date()){
-  const tz = new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
-  const nd = new Date(tz);
-  return nd.toISOString().slice(0,10);
+function ymd(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;  // e.g., 2025-09-10 (local date, no parsing issues)
 }
 function dayIndex(dateStr){
   const base = new Date("2024-01-01T00:00:00Z");
