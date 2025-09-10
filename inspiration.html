@@ -37,6 +37,12 @@
     .mini{font-size:.85rem;color:var(--muted)}
     nav ul{list-style:none;padding:0;margin:0;display:flex;gap:12px;flex-wrap:wrap}
     nav{padding:12px 24px}
+    /* TTS UI tweaks */
+    #tts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding: 0 16px 18px 16px; }
+    #tts label { display:flex; align-items:center; gap:6px; color: var(--muted); font-size: .95rem; }
+    #tts input[type="range"] { accent-color: #5ab1ff; }
+    .persona-row{display:flex;gap:8px;flex-wrap:wrap; padding: 0 16px 18px 16px; }
+    .persona-row button{ background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,.15); }
   </style>
 </head>
 <body>
@@ -86,6 +92,23 @@
           <button id="pdfBtn" class="ghost">Download Monthly PDF</button>
         </div>
       </div>
+
+      <!-- NEW: Voice selector & controls -->
+      <div id="tts" aria-label="Text to speech controls">
+        <select id="voiceSel" aria-label="Voice"></select>
+        <label>Rate <input id="rate" type="range" min="0.5" max="1.5" step="0.05" value="1"></label>
+        <label>Pitch <input id="pitch" type="range" min="0.5" max="2" step="0.1" value="1"></label>
+        <button id="speakBtn">🔊 Speak</button>
+        <button id="stopBtn">⏹️ Stop</button>
+      </div>
+
+      <!-- NEW: Persona quick buttons -->
+      <div class="persona-row">
+        <button onclick="TTS.speak(getInspoText(), {voiceName: getClosestVoice(['Samantha','Victoria','Karen','Serena','Google US English']), rate:0.95, pitch:0.9})">Delilah (warm)</button>
+        <button onclick="TTS.speak(getInspoText(), {voiceName: getClosestVoice(['Daniel','Alex','Fred','Moira','Microsoft David']), rate:1.0,  pitch:1.0})">Diego (neutral)</button>
+        <button onclick="TTS.speak(getInspoText(), {voiceName: getClosestVoice(['Eddy','Evan','Oliver','Nathan','Microsoft Mark']), rate:1.05, pitch:0.95})">Joe (news)</button>
+        <button onclick="TTS.speak(getInspoText(), {voiceName: getClosestVoice(['Ava','Allison','Sora','Tessa','Microsoft Zira']), rate:1.05, pitch:1.15})">Jane (bright)</button>
+      </div>
     </section>
 
     <footer>
@@ -93,10 +116,11 @@
     </footer>
   </div>
 
-  <!-- Load jsPDF (no integrity attr to avoid SRI mismatch) -->
+  <!-- Load jsPDF -->
   <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
+/** === 31-ENTRY VERSE BANK === */
 const VERSE_BANK = [
   {"ref":"Psalm 27:1 (KJV)","text":"The LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?","theme":"Courage","reflection":"God Himself is your light and salvation. Whatever darkness or fear rises up, remember who walks before you."},
   {"ref":"Isaiah 41:10 (KJV)","text":"Fear thou not; for I am with thee: be not dismayed; for I am thy God...","theme":"Strength","reflection":"God promises His presence and His help. You are never carrying your burdens alone."},
@@ -131,6 +155,7 @@ const VERSE_BANK = [
   {"ref":"Revelation 21:4 (KJV)","text":"And God shall wipe away all tears from their eyes...","theme":"Hope","reflection":"The story ends with no more pain. Hold on—your tears are temporary, but joy is eternal."}
 ];
 
+/** === Utilities === */
 function ymd(d=new Date()){
   const tz = new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
   const nd = new Date(tz);
@@ -171,13 +196,7 @@ function readAloud(text){
 }
 function buildShareText(dateStr, v, message){
   const title = `Inspiration Station — ${dateStr}`;
-  return `${title}
-${v.ref}
-${v.text}
-
-${message}
-
-#DailyDevotional #BibleVerse #TheMakingNoiseShow`;
+  return `${title}\n${v.ref}\n${v.text}\n\n${message}\n\n#DailyDevotional #BibleVerse #TheMakingNoiseShow`;
 }
 async function shareContent(text){
   const shareData = { text, title: "Inspiration Station" };
@@ -190,6 +209,7 @@ async function shareContent(text){
   }catch(e){}
 }
 
+/** === Init === */
 (async function init(){
   const dateStr = ymd();
   const idx = dayIndex(dateStr);
@@ -224,6 +244,7 @@ async function shareContent(text){
   document.getElementById('readBtn').onclick  = () => readAloud(`${v.text}. ${v.ref}. Reflection: ${message}`);
 })();
 
+/** === PDF: last 31 days === */
 async function generateMonthlyPDF() {
   if (!window.jspdf) { alert("PDF library failed to load. Please refresh and try again."); return; }
   const { jsPDF } = window.jspdf;
@@ -290,7 +311,84 @@ async function generateMonthlyPDF() {
 
   doc.save(`Inspiration-Station_${monthName.replace(/\s/g,'-')}.pdf`);
 }
-document.getElementById('pdfBtn')?.addEventListener('click', generateMonthlyPDF);
+(document.getElementById('pdfBtn')||{}).addEventListener?.('click', generateMonthlyPDF);
+
+/** === Web Speech: Voice UI + Personas === */
+(function(){
+  if (!('speechSynthesis' in window)) return console.warn('TTS not supported');
+
+  const voiceSel = document.getElementById('voiceSel');
+  const rate = document.getElementById('rate');
+  const pitch = document.getElementById('pitch');
+
+  function loadVoices(){
+    const voices = speechSynthesis.getVoices()
+      .filter(v => v.lang.startsWith('en'))
+      .sort((a,b)=> a.name.localeCompare(b.name));
+    voiceSel.innerHTML = voices.map(v =>
+      `<option value="${v.name}">${v.name} (${v.lang})${v.default?' — default':''}</option>`
+    ).join('');
+    const saved = localStorage.getItem('tts.voice');
+    if (saved) { const opt = [...voiceSel.options].find(o => o.value === saved); if (opt) opt.selected = true; }
+  }
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+
+  function speak(text, opts={}){
+    if (!text) return;
+    speechSynthesis.cancel();
+    const CHUNK = 180;
+    const chunks = [];
+    for (let i = 0; i < text.length; i += CHUNK) chunks.push(text.slice(i, i+CHUNK));
+
+    const voices = speechSynthesis.getVoices();
+    const voice = voices.find(v => v.name === (opts.voiceName || voiceSel.value));
+    localStorage.setItem('tts.voice', voice?.name || '');
+
+    chunks.forEach((chunk, idx) => {
+      const u = new SpeechSynthesisUtterance(chunk);
+      u.lang   = voice?.lang || 'en-US';
+      u.voice  = voice || null;
+      u.rate   = opts.rate ?? Number(rate.value) || 1;
+      u.pitch  = opts.pitch ?? Number(pitch.value) || 1;
+      u.volume = opts.volume ?? 1;
+      if (idx === 0 && opts.onstart) u.onstart = opts.onstart;
+      if (idx === chunks.length-1 && opts.onend) u.onend = opts.onend;
+      speechSynthesis.speak(u);
+    });
+  }
+
+  document.getElementById('speakBtn')?.addEventListener('click', () => {
+    const verse = document.getElementById('verse')?.textContent || '';
+    const ref   = document.getElementById('ref')?.textContent   || '';
+    const msg   = document.getElementById('message')?.textContent|| '';
+    const text  = [ref, verse, msg].filter(Boolean).join('. ');
+    speak(text);
+  });
+  document.getElementById('stopBtn')?.addEventListener('click', () => speechSynthesis.cancel());
+
+  rate.addEventListener('input', ()=> localStorage.setItem('tts.rate', rate.value));
+  pitch.addEventListener('input',()=> localStorage.setItem('tts.pitch', pitch.value));
+  const savedRate  = localStorage.getItem('tts.rate');  if (savedRate)  rate.value  = savedRate;
+  const savedPitch = localStorage.getItem('tts.pitch'); if (savedPitch) pitch.value = savedPitch;
+
+  window.TTS = { speak };
+})();
+
+function getInspoText(){
+  const verse = document.getElementById('verse')?.textContent || '';
+  const ref   = document.getElementById('ref')?.textContent   || '';
+  const msg   = document.getElementById('message')?.textContent|| '';
+  return [ref, verse, msg].filter(Boolean).join('. ');
+}
+function getClosestVoice(preferredNames){
+  const voices = speechSynthesis.getVoices();
+  for (const name of preferredNames){
+    const v = voices.find(v => v.name.toLowerCase().includes(name.toLowerCase()));
+    if (v) return v.name;
+  }
+  return document.getElementById('voiceSel')?.value || '';
+}
 </script>
 </body>
 </html>
