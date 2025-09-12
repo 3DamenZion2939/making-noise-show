@@ -17,11 +17,11 @@
     .wrap{max-width:1120px;margin:0 auto;padding:22px}
     header{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-bottom:16px}
     .brand{display:flex;align-items:center;gap:14px}
-    .brand img{width:64px;height:64px;object-fit:contain;border-radius:14px;border:1px solid var(--line);background:#fff}
+    .brand img{width:100px;height:auto;object-fit:contain;border-radius:14px;border:1px solid var(--line);background:#fff}
     h1{font-size:clamp(1.6rem,1.1rem + 2vw,2.2rem);margin:0}
     .sub{color:var(--muted);margin:0}
 
-    .hero{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:16px}
+    .hero{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:16px}
     .tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;color:var(--ink)}
     .caption{font-weight:700;color:#065f46}
 
@@ -58,12 +58,10 @@
     <div class="hero">
       <img src="/assets/gospelpus.png" alt="Gospelpus logo" onerror="this.style.visibility='hidden'" />
       <div>
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div class="brand"><h1>Gospelpus — Bible Reader & Storyteller</h1></div>
-          <span class="tag">Web Speech API • Local‑only • Printer‑friendly</span>
-        </div>
+        <div class="brand"><h1>Gospelpus — Bible Reader & Storyteller</h1></div>
         <p class="sub">Read Scripture and Bible stories with selectable voices. Switch into “Story Mode” to use a character voice for lines in quotes.</p>
         <div class="caption">Child Friendly Vessel</div>
+        <span class="tag">Web Speech API • Local‑only • Printer‑friendly</span>
       </div>
     </div>
 
