@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gospelpus — Bible Reader & Storyteller</title>
+  <meta name="description" content="Child‑friendly Bible reader & storyteller. Select voices, adjust rate/pitch, and read Scripture or stories with simple dialogue highlighting." />
+  <style>
+    :root{
+      --bg:#ffffff; --ink:#0f172a; --muted:#475569; --card:#f8fafc; --line:#e5e7eb;
+      --brand:#0ea5e9; --brand2:#22d3ee; --accent:#f59e0b; --ok:#16a34a;
+      --radius:18px; --shadow:0 8px 22px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;background:var(--bg);color:var(--ink)}
+    a{color:var(--brand);text-decoration:none}
+    .wrap{max-width:1120px;margin:0 auto;padding:22px}
+    header{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand img{width:64px;height:64px;object-fit:contain;border-radius:14px;border:1px solid var(--line);background:#fff}
+    h1{font-size:clamp(1.6rem,1.1rem + 2vw,2.2rem);margin:0}
+    .sub{color:var(--muted);margin:0}
+
+    .hero{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:16px}
+    .tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;color:var(--ink)}
+    .caption{font-weight:700;color:#065f46}
+
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px}
+    @media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-weight:600}
+    select,input[type="range"]{accent-color:var(--brand)}
+    button{appearance:none;border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    .ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff}
+
+    textarea{width:100%;min-height:240px;border-radius:12px;border:1px solid var(--line);padding:12px;background:#fff;color:var(--ink);line-height:1.6}
+    .script{font-size:1.05rem}
+    .playback{display:flex;gap:10px;flex-wrap:wrap}
+
+    .storybar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .badge{display:inline-block;background:rgba(14,165,233,.12);color:#0369a1;padding:4px 8px;border-radius:8px;font-weight:700}
+
+    .viewer{border:1px dashed var(--line);border-radius:12px;padding:12px;background:#fff;min-height:180px}
+    .seg{padding:.1rem .2rem;border-radius:6px}
+    .seg.speaking{background:rgba(34,211,238,.22)}
+    .seg.char{background:rgba(245,158,11,.15)}
+
+    footer{margin-top:18px;color:var(--muted);font-size:.92rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Top: Brand / Hero -->
+    <div class="hero">
+      <img src="/assets/gospelpus.png" alt="Gospelpus logo" onerror="this.style.visibility='hidden'" />
+      <div>
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="brand"><h1>Gospelpus — Bible Reader & Storyteller</h1></div>
+          <span class="tag">Web Speech API • Local‑only • Printer‑friendly</span>
+        </div>
+        <p class="sub">Read Scripture and Bible stories with selectable voices. Switch into “Story Mode” to use a character voice for lines in quotes.</p>
+        <div class="caption">Child Friendly Vessel</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- SCRIPT SIDE -->
+      <section class="panel">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>Script</strong>
+          <div class="row">
+            <button class="ghost" id="loadJohn">Load John 3:16</button>
+            <button class="ghost" id="loadStory">Load David & Goliath (short)</button>
+            <button class="ghost" id="clear">Clear</button>
+          </div>
+        </div>
+        <textarea id="script" class="script" spellcheck="false"></textarea>
+        <div class="row" style="justify-content:flex-end;margin-top:8px">
+          <button class="ghost" id="copy">Copy text</button>
+        </div>
+      </section>
+
+      <!-- PLAYER SIDE -->
+      <section class="panel">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>Reader</strong>
+          <div class="row">
+            <label class="row">Rate <input id="rate" type="range" min="0.6" max="1.5" step="0.05" value="1"></label>
+            <label class="row">Pitch <input id="pitch" type="range" min="0.6" max="1.5" step="0.05" value="1"></label>
+          </div>
+        </div>
+
+        <div class="row" style="margin:8px 0">
+          <label>Voice — Narrator
+            <select id="voiceA"></select>
+          </label>
+          <label>Voice — Character
+            <select id="voiceB"></select>
+          </label>
+        </div>
+
+        <div class="storybar">
+          <label class="row" style="gap:8px"><input type="checkbox" id="storyMode" /> Story Mode <span class="badge">alternates voices for quoted lines</span></label>
+        </div>
+
+        <div class="playback">
+          <button class="btn" id="play">▶︎ Play</button>
+          <button class="ghost" id="pause">⏸︎ Pause</button>
+          <button class="ghost" id="resume">⏯︎ Resume</button>
+          <button class="ghost" id="stop">⏹︎ Stop</button>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="viewer" id="viewer" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Tip: For studio audio, copy the script into 11Labs to render voices, then assemble visuals & captions in CapCut. This page is local‑only and safe for printing.
+    </footer>
+  </div>
+
+<script>
+(function(){
+  const scriptEl = document.getElementById('script');
+  const viewer = document.getElementById('viewer');
+  const rate = document.getElementById('rate');
+  const pitch = document.getElementById('pitch');
+  const voiceA = document.getElementById('voiceA');
+  const voiceB = document.getElementById('voiceB');
+  const storyMode = document.getElementById('storyMode');
+
+  const voicesState = { loaded:false };
+
+  function loadVoices(){
+    const voices = speechSynthesis.getVoices().filter(v=>v.lang.startsWith('en'));
+    const opts = voices.map(v=>`<option value="${v.name}">${v.name} (${v.lang})${v.default?' — default':''}</option>`).join('');
+    voiceA.innerHTML = opts; voiceB.innerHTML = opts;
+    voicesState.loaded = true;
+    const n = voices.find(v=>/Samantha|Serena|Victoria|Google US English|Alex/i.test(v.name)) || voices[0];
+    const c = voices.find(v=>/Daniel|Oliver|Moira|Microsoft (Mark|Zira)/i.test(v.name)) || voices[1] || voices[0];
+    if(n){[...voiceA.options].forEach(o=>{if(o.value===n.name)o.selected=true;});}
+    if(c){[...voiceB.options].forEach(o=>{if(o.value===c.name)o.selected=true;});}
+  }
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+
+  const JOHN = `John 3:16 — \"For God so loved the world, that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life.\"`;
+  const DAVID = `The valley was quiet. David said, \"You come to me with sword and spear,\" but then he lifted his voice, \"I come to you in the name of the Lord of hosts.\" The giant laughed. David ran forward. The stone flew, and Goliath fell.`;
+
+  document.getElementById('loadJohn').onclick = ()=>{scriptEl.value = JOHN; renderSegments();};
+  document.getElementById('loadStory').onclick = ()=>{scriptEl.value = DAVID; renderSegments();};
+  document.getElementById('clear').onclick = ()=>{scriptEl.value=''; viewer.innerHTML='';};
+  document.getElementById('copy').onclick = async ()=>{try{await navigator.clipboard.writeText(scriptEl.value);}catch(e){}}
+
+  function segmentize(text){
+    const parts = [];
+    let buf = '';
+    let inQuote = false;
+    for(const ch of text){
+      buf += ch;
+      if(ch === '"'){
+        parts.push({text:buf.trim(), quoted:true});
+        buf='';
+        inQuote = !inQuote;
+      } else if(/[.!?]/.test(ch) && !inQuote){
+        parts.push({text:buf.trim(), quoted:false});
+        buf='';
+      }
+    }
+    if(buf.trim()) parts.push({text:buf.trim(), quoted:inQuote});
+    return parts.filter(p=>p.text.length>0);
+  }
+
+  let segments = [];
+  function renderSegments(){
+    segments = segmentize(scriptEl.value);
+    viewer.innerHTML = segments.map((s,i)=>`<span class=\"seg ${s.quoted?'char':''}\" data-i=\"${i}\">${s.text}</span> `).join('');
+  }
+  scriptEl.addEventListener('input', renderSegments);
+
+  let playing = false; let current = -1;
+
+  function speakSegment(idx){
+    const seg = segments[idx]; if(!seg) return;
+    current = idx;
+    document.querySelectorAll('.seg').forEach(el=>el.classList.remove('speaking'));
+    const el = viewer.querySelector(`[data-i="${idx}"]`); if(el) el.classList.add('speaking');
+
+    const u = new SpeechSynthesisUtterance(seg.text.replace(/\s+/g,' ').trim());
+    const voices = speechSynthesis.getVoices();
+    const vA = voices.find(v=>v.name===voiceA.value);
+    const vB = voices.find(v=>v.name===voiceB.value);
+    const useB = storyMode.checked && seg.quoted && vB;
+    u.voice = useB ? vB : vA || null;
+    u.rate = Number(rate.value)||1; u.pitch = Number(pitch.value)||1; u.volume=1;
+    u.onend = ()=>{ if(!playing) return; if(idx+1 < segments.length){ speakSegment(idx+1); } else { stop(); } };
+    speechSynthesis.speak(u);
+  }
+
+  function play(){ if(!segments.length) renderSegments(); stop(true); playing = true; speakSegment(0); }
+  function pause(){ speechSynthesis.pause(); }
+  function resume(){ speechSynthesis.resume(); }
+  function stop(keep=false){ playing=false; current=-1; speechSynthesis.cancel(); if(!keep) document.querySelectorAll('.seg').forEach(el=>el.classList.remove('speaking')); }
+
+  document.getElementById('play').onclick = play;
+  document.getElementById('pause').onclick = pause;
+  document.getElementById('resume').onclick = resume;
+  document.getElementById('stop').onclick = ()=>stop(false);
+
+  // Initialize with John 3:16
+  document.getElementById('script').value = JOHN; renderSegments();
+})();
+</script>
+</body>
+</html>
