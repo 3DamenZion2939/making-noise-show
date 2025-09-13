@@ -9,33 +9,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0a0f1c; --card:#10182b; --ink:#e8eefc; --muted:#98a3c7; --accent:#ffd166;
-      --brand:#5ab1ff; --brand2:#88ffcc; --ok:#34d399; --warn:#f59e0b; --err:#ef4444;
+      --bg:#ffffff; --card:#f8f9fa; --ink:#0f172a; --muted:#475569; --accent:#f59e0b;
+      --brand:#0ea5e9; --brand2:#22d3ee; --ok:#15803d; --warn:#b45309; --err:#b91c1c;
     }
     *{box-sizing:border-box}
-    html,body{margin:0;height:100%;font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(1200px 1200px at 10% -10%, #142246, transparent), var(--bg);color:var(--ink)}
+    html,body{margin:0;height:100%;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
     a{color:var(--brand);text-decoration:none}
     .wrap{max-width:980px;margin:0 auto;padding:28px}
     header{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
     h1{font-size:2rem;margin:0}
     .sub{color:var(--muted);margin:0}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.06);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.35);padding:20px}
+    .card{background:var(--card);border:1px solid rgba(0,0,0,0.08);border-radius:18px;box-shadow:0 6px 16px rgba(0,0,0,0.08);padding:20px}
     .grid{display:grid;grid-template-columns:1fr;gap:16px}
     @media(min-width:900px){ .grid{grid-template-columns: 1.1fr .9fr} }
     label{display:block;font-weight:600;margin:10px 0 6px}
-    input,select,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0f1730;color:var(--ink)}
+    input,select,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #cbd5e1;background:#ffffff;color:var(--ink)}
     textarea{min-height:140px;resize:vertical}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .hint{color:var(--muted);font-size:.92rem}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:700;color:#0a0f1c;cursor:pointer;background:linear-gradient(135deg,var(--brand),var(--brand2));}
-    .ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,0.15);padding:10px 14px;border-radius:12px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:700;color:#ffffff;cursor:pointer;background:linear-gradient(135deg,var(--brand),var(--brand2));}
+    .ghost{background:transparent;color:var(--ink);border:1px solid rgba(0,0,0,0.15);padding:10px 14px;border-radius:12px}
     .note{font-size:.92rem;color:var(--muted)}
     .ok{color:var(--ok)} .err{color:var(--err)} .warn{color:var(--warn)}
     footer{margin:28px 0 6px;color:var(--muted);text-align:center;font-size:.9rem}
-    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--ink)}
+    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:var(--ink)}
     nav ul{list-style:none;padding:0;margin:0;display:flex;gap:12px;flex-wrap:wrap}
     nav{padding:12px 24px}
-    .testimony{border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;background:rgba(255,209,102,.06);border-radius:10px}
+    .testimony{border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;background:rgba(245,158,11,0.08);border-radius:10px}
     .section-title{margin:18px 0 8px}
   </style>
 </head>
@@ -61,7 +61,6 @@
         <h2 class="section-title">Submit a Prayer Request</h2>
         <p class="note">Share as much or as little as you’re comfortable with. Your request goes directly to our team for prayer. You’ll also receive a copy by email.</p>
 
-        <!-- Netlify Forms: AJAX submit to stay on page -->
         <form id="prayerForm" name="prayer" method="POST" data-netlify="true" netlify-honeypot="bot-field">
           <input type="hidden" name="form-name" value="prayer" />
           <p style="display:none">
@@ -130,12 +129,10 @@
       </aside>
     </div>
 
-    <!-- Testimonies section (manually curated) -->
     <section class="card" style="margin-top:16px">
       <h2 class="section-title">Testimonies & Praise Reports</h2>
       <p class="note">Answered prayer? Send a short praise report using the same form above and check “permission to share.” We’ll post some of them here to encourage others.</p>
 
-      <!-- Example testimonies (edit these in your repo) -->
       <div class="testimony">
         <strong>J. R.</strong>: “Doctors found nothing on the follow-up. Thank you for praying with me—God is faithful.”
       </div>
@@ -148,10 +145,8 @@
   </div>
 
 <script>
-// Year
 document.getElementById('year').textContent = new Date().getFullYear();
 
-// Netlify AJAX submit so we stay on page
 const form = document.getElementById('prayerForm');
 const status = document.getElementById('status');
 
