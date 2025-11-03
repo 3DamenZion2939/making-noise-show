@@ -1,0 +1,19 @@
+#EXTM3U
+
+#EXTINF:-1 tvg-id="DWEnglish.de" tvg-name="DW English" group-title="Documentary & Knowledge",DW English (Live)
+https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
+
+#EXTINF:-1 tvg-id="HopeChannelInternational" tvg-name="Hope Channel International" group-title="Christian Inspiration",Hope Channel International (Live)
+https://jstre.am/live/jsl:cZXINbwrFj6.m3u8
+
+#EXTINF:-1 tvg-id="3ABNLatino.us" tvg-name="3ABN Latino" group-title="Christian Inspiration",3ABN Latino (Live)
+https://3abn-live.akamaized.net/hls/live/2010547/Latino/SQs/chunklist.m3u8
+
+#EXTINF:-1 tvg-id="NASATVMedia" tvg-name="NASA TV Media Channel" group-title="Documentary & Knowledge",NASA TV Media (Live)
+https://ntv1-aka.pluto-live.pluto.tv/hls/live/2011600/NTV1/master.m3u8
+
+#EXTINF:-1 tvg-id="CGTNDocumentary" tvg-name="CGTN Documentary" group-title="Documentary & Knowledge",CGTN Documentary (Live)
+https://live.cgtn.com/1000d/prog_index.m3u8
+
+#EXTINF:-1 tvg-id="BloombergOriginals" tvg-name="Bloomberg Originals" group-title="Documentary & Knowledge",Bloomberg Originals (Live)
+https://bloomberg-bloomberg-1-gb.samsung.wurl.com/manifest/playlist.m3u8
