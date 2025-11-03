@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3DTV – Faith & Docs Live</title>
+  <style>
+    :root { --bg:#0b0f17; --card:#121826; --text:#e6ecff; --muted:#9bb0ff; --accent:#5dd4ff; }
+    html,body{height:100%;}
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji"; background:linear-gradient(180deg,#09101a,#0b0f17 40%); color:var(--text); }
+    .wrap{max-width:1100px;margin:0 auto;padding:20px;}
+    .hero{display:flex;gap:18px;flex-wrap:wrap;align-items:stretch}
+    .player{flex:2 1 640px;background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:12px}
+    .side{flex:1 1 300px;background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;min-height:360px}
+    h1{font-size:clamp(20px,3vw,30px);margin:0 0 6px;font-weight:800;letter-spacing:.2px}
+    p.lead{margin:0 0 14px;color:var(--muted)}
+    video{width:100%;height:62vh;min-height:320px;background:#000;border-radius:12px}
+    .row{display:flex;gap:10px;align-items:center;margin-top:10px}
+    select,button,input[type="text"]{background:#0f1422;color:var(--text);border:1px solid #2a3550;border-radius:10px;padding:10px 12px;font-size:14px}
+    select{width:100%;}
+    button{cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#1a90ff,#0c67ff);border:none}
+    .group{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:700;color:var(--accent)}
+    .list{overflow:auto;flex:1}
+    .chan{padding:10px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)}
+    .chan:hover{background:#0e1424}
+    .active{background:#0e1a33}
+    .badge{font-size:12px;color:#b9c9ff}
+    .foot{margin-top:10px;color:#93a7ff;font-size:12px}
+    .small{font-size:12px;color:#93a7ff}
+    @media (max-width:900px){ video{height:42vh} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>3DTV · Faith & Docs Live</h1>
+    <p class="lead">Web player demo with legal public streams. Paste your playlist URL or use the built‑in lineup. Click any channel to play. Works on desktop browsers (mobile requires user tap to start).</p>
+
+    <div class="hero">
+      <div class="player">
+        <video id="video" controls playsinline></video>
+        <div class="row">
+          <input id="m3uUrl" type="text" placeholder="Paste a .m3u URL (e.g. https://yourdomain.com/Faith_and_Docs_EXTENDED.m3u)" style="flex:1" />
+          <button id="loadBtn" class="primary">Load Playlist URL</button>
+        </div>
+        <div class="foot small">Tip: Add <code>?src=YOUR_M3U_URL</code> to this page URL to auto‑load your playlist. Last channel is remembered per browser.</div>
+      </div>
+
+      <div class="side">
+        <div class="group">Channels</div>
+        <div id="list" class="list"></div>
+        <div style="padding:10px 12px">
+          <button id="restoreBtn">Restore Built‑in Demo Playlist</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- hls.js for HLS support in non‑Safari browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+  <script>
+    // --- Built‑in demo channels (legal/public) ---
+    const builtin = [
+      { title:"DW English (Live)", url:"https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", group:"Documentary & Knowledge" },
+      { title:"NASA TV Media (Live)", url:"https://ntv1-aka.pluto-live.pluto.tv/hls/live/2011600/NTV1/master.m3u8", group:"Documentary & Knowledge" },
+      { title:"CGTN Documentary (Live)", url:"https://live.cgtn.com/1000d/prog_index.m3u8", group:"Documentary & Knowledge" },
+      { title:"Bloomberg Originals (Live)", url:"https://bloomberg-bloomberg-1-gb.samsung.wurl.com/manifest/playlist.m3u8", group:"Documentary & Knowledge" },
+      { title:"Hope Channel International (Live)", url:"https://jstre.am/live/jsl:cZXINbwrFj6.m3u8", group:"Christian Inspiration" },
+      { title:"3ABN Latino (Live)", url:"https://3abn-live.akamaized.net/hls/live/2010547/Latino/SQs/chunklist.m3u8", group:"Christian Inspiration" },
+    ];
+
+    const video = document.getElementById('video');
+    const listEl = document.getElementById('list');
+    const urlInput = document.getElementById('m3uUrl');
+
+    // Helper: parse M3U text to array of {title,url,group}
+    function parseM3U(text){
+      const lines = text.split(/\r?\n/);
+      const out = [];
+      let meta = null;
+      for(let i=0;i<lines.length;i++){
+        const L = lines[i].trim();
+        if(!L) continue;
+        if(L.startsWith('#EXTINF')){
+          // Extract title and attributes (e.g., group-title)
+          // Example: #EXTINF:-1 tvg-id="..." group-title="Christian",Channel Name
+          const m = L.match(/^#EXTINF:[^,]*,(.*)$/);
+          const title = m ? m[1].trim() : 'Channel';
+          const grp = (L.match(/group-title="([^"]+)"/i)||[])[1] || '';
+          meta = { title, group: grp };
+        } else if(!L.startsWith('#')){
+          if(meta){ out.push({ title: meta.title, url: L, group: meta.group || '' }); meta = null; }
+        }
+      }
+      return out;
+    }
+
+    // Render channel list grouped
+    function renderList(chans){
+      listEl.innerHTML = '';
+      const groups = {};
+      chans.forEach(c=>{ (groups[c.group||'Other'] ||= []).push(c); });
+      Object.keys(groups).forEach(g=>{
+        const gEl = document.createElement('div');
+        gEl.className = 'group'; gEl.textContent = g; listEl.appendChild(gEl);
+        groups[g].forEach((c,idx)=>{
+          const el = document.createElement('div');
+          el.className = 'chan';
+          el.innerHTML = `<div>${c.title}</div><div class="badge">${new URL(c.url).hostname}</div>`;
+          el.onclick = ()=> play(c, el);
+          listEl.appendChild(el);
+        });
+      });
+    }
+
+    // HLS play utility
+    let hls;
+    function play(item, rowEl){
+      // Highlight active
+      document.querySelectorAll('.chan').forEach(e=>e.classList.remove('active'));
+      if(rowEl) rowEl.classList.add('active');
+
+      if (hls) { hls.destroy(); hls = null; }
+      const canNative = video.canPlayType('application/vnd.apple.mpegurl');
+      if (canNative) {
+        video.src = item.url; video.play();
+      } else if (Hls.isSupported()) {
+        hls = new Hls({ maxBufferLength: 20 });
+        hls.loadSource(item.url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, ()=> video.play());
+      } else {
+        alert('HLS not supported in this browser. Try Chrome/Edge/Firefox desktop or Safari.');
+      }
+      localStorage.setItem('lastChannel', JSON.stringify(item));
+    }
+
+    // Load playlist URL (M3U) from input
+    async function loadFromUrl(u){
+      try{
+        const res = await fetch(u);
+        const txt = await res.text();
+        const chans = parseM3U(txt);
+        if(!chans.length) throw new Error('No channels found in playlist');
+        renderList(chans);
+        play(chans[0]);
+        localStorage.setItem('lastPlaylistUrl', u);
+      }catch(err){
+        alert('Failed to load playlist: '+err.message);
+      }
+    }
+
+    // UI hooks
+    document.getElementById('loadBtn').onclick = ()=>{
+      const u = urlInput.value.trim();
+      if(!u) return alert('Paste a .m3u URL first.');
+      loadFromUrl(u);
+    };
+    document.getElementById('restoreBtn').onclick = ()=>{
+      renderList(builtin); play(builtin[0]); localStorage.removeItem('lastPlaylistUrl');
+    };
+
+    // Autoload: query param ?src=... or last saved playlist/channel
+    (function init(){
+      const p = new URLSearchParams(location.search);
+      const src = p.get('src') || localStorage.getItem('lastPlaylistUrl');
+      if(src){ urlInput.value = src; loadFromUrl(src); return; }
+      const last = localStorage.getItem('lastChannel');
+      renderList(builtin);
+      if(last){ try{ play(JSON.parse(last)); } catch{ play(builtin[0]); } }
+      else{ play(builtin[0]); }
+    })();
+  </script>
+</body>
+</html>
