@@ -221,6 +221,23 @@
       if(last){ try{ play(JSON.parse(last)); } catch{ play(builtin[0]); } }
       else{ play(builtin[0]); }
     })();
+    <script>
+  // --- Filter button logic ---
+  document.addEventListener("click", e => {
+    if (!e.target.classList.contains("filter")) return;
+    document.querySelectorAll(".filter").forEach(b => b.classList.remove("active"));
+    e.target.classList.add("active");
+    const group = e.target.dataset.group;
+    document.querySelectorAll(".chan").forEach(c => {
+      if (group === "All" || c.querySelector(".badge").textContent.includes(group.split(" ")[0])) {
+        c.style.display = "";
+      } else {
+        c.style.display = "none";
+      }
+    });
+  });
+</script>
+
   </script>
 </body>
 </html>
