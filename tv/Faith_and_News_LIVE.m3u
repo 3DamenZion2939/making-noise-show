@@ -1,13 +1,12 @@
 #EXTM3U
+#EXTINF:-1 tvg-id="DWEnglish.de" tvg-name="DW English" group-title="Documentary & Knowledge",DW English (Live)
+https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
 
 #EXTINF:-1 tvg-id="HopeChannelInternational" tvg-name="Hope Channel International" group-title="Christian Inspiration",Hope Channel International (Live)
 https://jstre.am/live/jsl:cZXINbwrFj6.m3u8
 
 #EXTINF:-1 tvg-id="Daystar" tvg-name="Daystar Television Network" group-title="Christian Inspiration",Daystar Television Network (Website)
 https://www.daystar.com/live/
-
-#EXTINF:-1 tvg-id="DWEnglish.de" tvg-name="DW English" group-title="Documentary & Knowledge",DW English (Live)
-https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
 
 #EXTINF:-1 tvg-id="France24EN.fr" tvg-name="France 24 English" group-title="World News",France 24 English (Live)
 https://static.france24.com/live/F24_EN_HI_HLS/live_web.m3u8
